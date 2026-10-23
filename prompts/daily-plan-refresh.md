@@ -1,6 +1,6 @@
 ---
 name: daily-plan-refresh
-description: Weekdays 09:00 and 13:00: build ~/.daily-plan/plan.json from Google Calendar + Jira for the DailyPlan menu bar widget
+description: Weekdays at 09:00 and 13:00, build ~/.daily-plan/plan.json from Google Calendar and Jira for the DailyPlan menu bar widget
 ---
 
 <!--
