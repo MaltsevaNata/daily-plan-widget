@@ -120,16 +120,13 @@ final class TimelineView: NSView {
         let x0 = pad + gutter, x1 = W - pad
         let nowM = nowMinutes()
 
-        if draw {
-            let mono = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
-            for h in startH...endH {
-                let hy = yFor(h * 60)
-                _ = text(String(format: "%02d:00", h), x: pad, y: hy - 6, width: gutter,
-                         font: mono, color: .tertiaryLabelColor, draw: true)
-                NSColor.separatorColor.setFill()
-                NSRect(x: x0, y: hy, width: x1 - x0, height: 0.5).fill()
-            }
-            NSRect(x: x0, y: top, width: 0.5, height: yFor(endH * 60) - top).fill()
+        // Blocks are collected first so the grid can be drawn around them:
+        // they're translucent, and lines showing through read as strikethroughs.
+        var blocks: [(rect: NSRect, paint: () -> Void)] = []
+        func addBlock(_ r: NSRect, tint: NSColor, title: String, subtitle: String?, past: Bool, url: String?) {
+            blocks.append((r.insetBy(dx: 1, dy: 1), { [unowned self] in
+                self.block(r, tint: tint, title: title, subtitle: subtitle, past: past, url: url, draw: draw)
+            }))
         }
 
         // --- Focus blocks: free gaps between meetings inside the visible range
@@ -143,9 +140,9 @@ final class TimelineView: NSView {
         if endH * 60 - cursor >= minFocus { gaps.append((cursor, endH * 60)) }
         for (s, e) in gaps {
             let past = isToday && e <= nowM
-            block(NSRect(x: x0 + 3, y: yFor(s), width: x1 - x0 - 3, height: yFor(e) - yFor(s)),
-                  tint: .systemGreen, title: "Focus \(duration(e - s))", subtitle: nil,
-                  past: past, url: nil, draw: draw)
+            addBlock(NSRect(x: x0 + 3, y: yFor(s), width: x1 - x0 - 3, height: yFor(e) - yFor(s)),
+                     tint: .systemGreen, title: "Focus \(duration(e - s))", subtitle: nil,
+                     past: past, url: nil)
         }
 
         // --- Meetings, overlapping ones split into side-by-side lanes
@@ -169,12 +166,31 @@ final class TimelineView: NSView {
             let laneW = (x1 - x0 - 3) / CGFloat(laneEnds.count)
             for (k, e) in cluster.enumerated() {
                 let s = minutes(e.start), en = minutes(e.end)
-                block(NSRect(x: x0 + 3 + CGFloat(lanes[k]) * laneW, y: yFor(s), width: laneW, height: yFor(en) - yFor(s)),
-                      tint: e.isMeeting ? .systemBlue : .systemOrange, title: shortTitle(e.title), subtitle: "\(e.start)–\(e.end)",
-                      past: isToday && en <= nowM, url: e.url, draw: draw)
+                addBlock(NSRect(x: x0 + 3 + CGFloat(lanes[k]) * laneW, y: yFor(s), width: laneW, height: yFor(en) - yFor(s)),
+                         tint: e.isMeeting ? .systemBlue : .systemOrange, title: shortTitle(e.title), subtitle: "\(e.start)–\(e.end)",
+                         past: isToday && en <= nowM, url: e.url)
             }
             i = j
         }
+
+        // --- Grid (hour labels + lines, clipped out under blocks), then the blocks on top
+        if draw {
+            let mono = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
+            for h in startH...endH {
+                _ = text(String(format: "%02d:00", h), x: pad, y: yFor(h * 60) - 6, width: gutter,
+                         font: mono, color: .tertiaryLabelColor, draw: true)
+            }
+            NSGraphicsContext.saveGraphicsState()
+            let clip = NSBezierPath(rect: bounds)
+            for b in blocks { clip.append(NSBezierPath(roundedRect: b.rect, xRadius: 5, yRadius: 5)) }
+            clip.windingRule = .evenOdd
+            clip.addClip()
+            NSColor.separatorColor.setFill()
+            for h in startH...endH { NSRect(x: x0, y: yFor(h * 60), width: x1 - x0, height: 0.5).fill() }
+            NSRect(x: x0, y: top, width: 0.5, height: yFor(endH * 60) - top).fill()
+            NSGraphicsContext.restoreGraphicsState()
+        }
+        for b in blocks { b.paint() }
 
         // --- Now line
         if draw && isToday && nowM >= startH * 60 && nowM <= endH * 60 {
@@ -216,7 +232,9 @@ final class TimelineView: NSView {
         if !notes.isEmpty {
             y += 6
             for n in notes {
-                y += text("• \(n)", x: pad, y: y, width: W - 2 * pad, font: .systemFont(ofSize: 11),
+                _ = text("•", x: pad, y: y, width: 10, font: .systemFont(ofSize: 11),
+                         color: .secondaryLabelColor, draw: draw)
+                y += text(n, x: pad + 10, y: y, width: W - 2 * pad - 10, font: .systemFont(ofSize: 11),
                           color: .secondaryLabelColor, draw: draw) + 2
             }
         }
