@@ -91,3 +91,7 @@ launchctl bootout gui/$(id -u)/com.$(id -un).dailyplan
 rm ~/Library/LaunchAgents/com.$(id -un).dailyplan.plist
 rm -rf ~/.daily-plan
 ```
+
+## License
+
+[MIT](LICENSE)
