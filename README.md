@@ -2,7 +2,7 @@
 
 A tiny native macOS menu bar widget that shows today's plan as a vertical timeline:
 meetings, focus blocks, lunch, and your top priorities. The plan is generated every
-weekday morning by a [Claude](https://claude.com) scheduled task from Google Calendar and Jira.
+weekday morning by a [Claude](https://claude.com) scheduled task from Google Calendar, Jira and open asks in Slack.
 
 <p>
   <img src="docs/preview-light.png" width="320" alt="Light theme">
@@ -44,11 +44,11 @@ cp examples/plan.example.json ~/.daily-plan/plan.json
 The widget only reads `~/.daily-plan/plan.json`; anything can write it. The intended setup is a
 Claude desktop app scheduled task:
 
-1. Connect the **Google Calendar** and **Atlassian (Jira)** connectors.
+1. Connect the **Google Calendar**, **Atlassian (Jira)** and **Slack** connectors.
 2. Create a scheduled task with cron `0 9,13 * * 1-5` (weekdays 09:00 and 13:00).
-3. Use [`prompts/daily-plan-refresh.md`](prompts/daily-plan-refresh.md) as its prompt, after filling in the `<PLACEHOLDERS>` (name, email, timezone, lunch time, Atlassian cloud ID).
+3. Use [`prompts/daily-plan-refresh.md`](prompts/daily-plan-refresh.md) as its prompt, after filling in the `<PLACEHOLDERS>` (name, email, timezone, lunch time, Atlassian cloud ID, Slack user ID).
 
-The 09:00 run builds the plan. The 13:00 run refreshes meetings but keeps priorities, so your checkmarks survive.
+The 09:00 run builds the plan. Priorities come from your Jira tickets plus Slack threads that still need you: unanswered questions, review or approval requests, and promises you haven't closed. Threads you've already answered are dropped. The 13:00 run refreshes meetings and only appends new Slack asks, so your checkmarks survive.
 Each previous day's plan is archived to `~/.daily-plan/history/`.
 
 ## plan.json format
@@ -71,7 +71,7 @@ Each previous day's plan is archived to `~/.daily-plan/history/`.
 | Field | Meaning |
 |---|---|
 | `events[].kind` | Omit for meetings. `lunch` or `personal` are drawn in orange and never show in the menu bar countdown |
-| `priorities[].ref` | Optional ticket key, drawn as a link to `url` |
+| `priorities[].ref` | Optional short label drawn as a link to `url`: a ticket key, `Slack`, or an MR id like `!1234` |
 | `notes` | Short lines under the priorities. Lines starting with "Focus block" are hidden because the timeline already shows them |
 
 See [`examples/plan.example.json`](examples/plan.example.json) for a full example.
