@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-26",
+  "generatedAt": "2026-10-26T09:00:00+04:00",
+  "events": [
+    {"start": "10:30", "end": "11:00", "title": "Daily standup", "url": "https://meet.google.com/abc-defg-hij"},
+    {"start": "13:00", "end": "14:00", "title": "Sprint planning", "url": "https://meet.google.com/klm-nopq-rst"},
+    {"start": "14:15", "end": "14:45", "title": "Lunch", "url": null, "kind": "lunch"},
+    {"start": "16:00", "end": "16:30", "title": "1:1 with manager", "url": null},
+    {"start": "17:30", "end": "19:00", "title": "Out of office", "url": null, "kind": "personal"}
+  ],
+  "priorities": [
+    {"title": "Get the API change through review", "ref": "PROJ-101", "url": "https://example.atlassian.net/browse/PROJ-101"},
+    {"title": "Write integration tests for the scan endpoint", "ref": "PROJ-102", "url": "https://example.atlassian.net/browse/PROJ-102"},
+    {"title": "Prepare the rollout checklist", "ref": null, "url": null}
+  ],
+  "notes": [
+    "2h meetings today",
+    "Prep for the 1:1 at 16:00"
+  ]
+}

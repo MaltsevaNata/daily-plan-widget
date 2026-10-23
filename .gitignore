@@ -1,0 +1,10 @@
+# build output
+DailyPlan
+*.o
+
+# personal runtime data (lives in ~/.daily-plan, never commit it)
+plan.json
+done.json
+history/
+
+.DS_Store
